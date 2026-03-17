@@ -1,0 +1,10 @@
+build_args:
+  DOTNET_VERSION: "8.0"
+  CONFIGURATION: "Release"
+
+env_vars:
+  ASPNETCORE_ENVIRONMENT: "Production"
+
+feature_flags:
+  enable_incident_ai: true
+  enable_safety_analytics: false

@@ -1,0 +1,13 @@
+hooks:
+  pre_build:
+    - "dotnet restore"
+  post_build:
+    - "echo 'Build complete'"
+  pre_deploy:
+    staging:
+      - "echo 'Running DB migrations on staging'"
+    production:
+      - "echo 'Running DB migrations on production'"
+  post_deploy:
+    production:
+      - "echo 'Running smoke tests'"
