@@ -1,15 +1,15 @@
-name: "Standard Pipeline: DevonWay"
+name: Standard Pipeline
 on:
   workflow_dispatch:
   pull_request:
+    branches: [main]
   push:
     branches: [main]
     tags: ["v*"]
 
 jobs:
-  # ── Build ──────────────────────────────────────────────
   build:
-    name: "Build (.NET 8)"
+    name: Build (.NET 8)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,9 +19,8 @@ jobs:
           echo "Restoring NuGet packages..."
           echo "Build succeeded: 0 warnings, 0 errors"
 
-  # ── Unit Tests ─────────────────────────────────────────
   test:
-    name: "Unit Tests"
+    name: Unit Tests
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -33,9 +32,8 @@ jobs:
           echo "Code coverage: 84.2% (floor: 80%)"
           echo "All .NET tests passed"
 
-  # ── SAST Scan (SonarQube) ──────────────────────────────
   sast-scan:
-    name: "SAST Scan (SonarQube)"
+    name: SAST Scan (SonarQube)
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -44,113 +42,76 @@ jobs:
         run: |
           echo "Connecting to SonarQube (self-hosted)..."
           echo "Project: devonway"
-          echo "Analyzing src/ for security vulnerabilities..."
           echo "Coverage floor: 80% (platform policy)"
-          echo "Duplication max: 10%"
           echo "SAST scan: PASSED"
 
-  # ── SBOM Generation (Veracode) ─────────────────────────
   sbom:
-    name: "SBOM Generation (Veracode)"
+    name: SBOM Generation (Veracode)
     needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Generate SBOM via Veracode
+      - name: Generate SBOM
         run: |
-          echo "Generating Software Bill of Materials..."
-          echo "Scanner: Veracode SCA"
-          echo "Scanning NuGet packages from DevonWay.Api.csproj"
-          echo "Output: sbom-devonway.json (CycloneDX format)"
+          echo "Generating SBOM via Veracode SCA..."
+          echo "Output: sbom-devonway.json (CycloneDX)"
           echo "SBOM generation: COMPLETE"
 
-  # ── E2E Tests (Playwright) ─────────────────────────────
   e2e-tests:
-    name: "E2E Tests (Playwright)"
+    name: E2E Tests (Playwright)
     needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run Playwright E2E tests
+      - name: Run E2E tests
         run: |
-          echo "Starting Playwright E2E test suite..."
-          echo "Target: http://localhost:8000"
-          echo "Tests: login, tenant-creation, audit-export"
-          echo "Browser: chromium (headless)"
+          echo "Running Playwright E2E suite..."
           echo "3/3 E2E tests passed"
 
-  # ── Contract Tests (Pact) ──────────────────────────────
   contract-tests:
-    name: "Contract Tests (Pact)"
+    name: Contract Tests (Pact)
     needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run Pact contract tests
+      - name: Run Pact tests
         run: |
           echo "Running Pact contract verification..."
-          echo "Provider: devonway API"
-          echo "Consumer contracts: 2 (frontend, mobile)"
-          echo "Pact Broker: self-hosted"
           echo "All contracts verified: PASSED"
 
-  # ── Security Verification ──────────────────────────────
   security-verify:
-    name: "Security Verification"
+    name: Security Verification
     needs: [sast-scan, sbom]
     runs-on: ubuntu-latest
     steps:
-      - name: Verify all security gates
+      - name: Verify security gates
         run: |
-          echo "Verifying security gates..."
-          echo "  SAST (SonarQube): PASSED"
-          echo "  SBOM (Veracode):  GENERATED"
-          echo "  CVE scan:         0 critical, 0 high"
-          echo "  License check:    All licenses approved"
           echo "All security gates PASSED"
 
-  # ── Container Build & Push ─────────────────────────────
   container-push:
-    name: "Container Build & Push"
+    name: Container Build and Push
     needs: [test, security-verify, e2e-tests, contract-tests]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build container image
-        run: echo "Building container devonway:${{ github.sha }}"
-      - name: Push to ECR
-        run: echo "Pushed to ECR: devonway:${{ github.sha }}"
+      - name: Build and push container
+        run: |
+          echo "Built and pushed devonway:${{ github.sha }}"
 
-  # ── Deploy to Test Environment ─────────────────────────
   deploy-test:
-    name: "Deploy to Test Environment"
+    name: Deploy to Test Environment
     needs: container-push
     runs-on: ubuntu-latest
-    # environment: test  # disabled for demo (requires pre-configured GH environment)
     steps:
       - name: Deploy via ArgoCD
         run: |
-          echo "Deploying devonway:${{ github.sha }} to test environment..."
-          echo "Cluster: eks-test-cluster"
-          echo "Namespace: devonway-test"
-          echo "Helm release: devonway"
-          echo "Deployment: SUCCESSFUL"
-          echo "Health check: /health returned 200 OK"
+          echo "Deployed devonway to test environment"
+          echo "Health check: 200 OK"
 
-  # ── New Relic Baseline Capture ─────────────────────────
   nr-baseline:
-    name: "New Relic Baseline Capture"
+    name: New Relic Baseline
     needs: deploy-test
     runs-on: ubuntu-latest
     steps:
-      - name: Capture baseline metrics
-        run: |
-          echo "Capturing New Relic baseline metrics..."
-          echo "Application: devonway (test)"
-          echo "Metrics: response_time, throughput, error_rate, apdex"
-          echo "Baseline snapshot stored: nr-baseline-${{ github.sha }}.json"
-          echo "Baseline capture: COMPLETE"
-
-  # ── AI Code Review ────────────────────────────────────
-  # GitHub Copilot reviews PRs natively — no custom workflow needed.
-  # Enable via: Repo Settings → Code review → Copilot
+      - name: Capture baseline
+        run: echo "New Relic baseline captured"

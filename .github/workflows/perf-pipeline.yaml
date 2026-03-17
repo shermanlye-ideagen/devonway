@@ -1,7 +1,7 @@
-name: "Perf Pipeline: devonway"
+name: Perf Pipeline
 on:
   workflow_run:
-    workflows: ["Standard Pipeline: devonway"]
+    workflows: ["Standard Pipeline"]
     types: [completed]
     branches: [main]
 
