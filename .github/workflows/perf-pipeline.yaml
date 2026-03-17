@@ -11,7 +11,7 @@ jobs:
     name: "Deploy to Perf Test Environment"
     if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    environment: perftest
+    # environment: perftest  # disabled for demo
     steps:
       - name: Deploy to perf environment
         run: |

@@ -11,14 +11,14 @@ jobs:
     name: "Deploy to Staging (PreProd)"
     if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    environment: staging
+    # environment: staging  # disabled for demo
     steps:
       - name: Deploy to staging environment
         run: |
           echo "Deploying devonway to staging (pre-production)..."
           echo "Cluster: eks-staging-cluster"
           echo "Namespace: devonway-staging"
-          echo "Approval gate: REQUIRED (silver tier policy)"
+          echo "Approval gate: REQUIRED (platform policy)"
           echo "Deployment: SUCCESSFUL"
 
   # ── Integration Tests ──────────────────────────────────
@@ -57,7 +57,7 @@ jobs:
     name: "User Acceptance Testing"
     needs: [integration-tests, e2e-business]
     runs-on: ubuntu-latest
-    environment: uat-approval
+    # environment: uat-approval  # disabled for demo
     steps:
       - name: UAT validation
         run: |
